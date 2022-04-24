@@ -1,36 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Windows;
+using HCI.Util;
+using System.Windows.Documents;
 
 namespace HCI.Chart
 {
-    internal class LineChart
+    internal class LineChart<LabelType, ValueType, MarkerType>
     {
-        private readonly Canvas Canvas;
-        private double MinValue = 0.0;
-        private double MaxValue = 0.0;
-        private List<double> _Values = new();
-
-        public uint GridRows { get; set; } = 0;
-        public uint GridCols { get; set; } = 0;
-        public Brush Stroke { get; set; } = Brushes.Black;
-        public List<double> Values
+        private static readonly List<Brush> Colors = new()
         {
-            get => Values;
-            set
-            {
-                _Values = value;
-                MinValue = value.Min();
-                MaxValue = value.Max();
-            }
-        }
-        public List<string> Labels { get; set; } = new();
+            Brushes.DeepPink,
+            Brushes.DarkGreen,
+            Brushes.Crimson,
+            Brushes.Black,
+        };
+
+        private readonly Canvas Canvas;
+
+        private double GlobalMax = double.MinValue;
+        private double GlobalMin = double.MaxValue;
+
+        public int GridRows { get; set; } = 1;
+        public int GridCols { get; set; } = 1;
+
+        public Dictionary<LabelType, ListTransform<ValueType, double>> Ys;
+        public ListTransform<MarkerType, string> Xs;
 
         public LineChart(Canvas canvas)
         {
@@ -39,17 +38,26 @@ namespace HCI.Chart
 
         public void Draw()
         {
+            GlobalMaxima(1.05);
             DrawGrid();
+            AddMapLegend();
+
+            var i = 0;
+            foreach (var kv in Ys)
+            {
+                DrawLine(kv.Value.Apply().ToList(), Colors[i % Colors.Count]);
+                ++i;
+            }
         }
 
         public void DrawGrid()
         {
             if (GridRows >= 2)
             {
-                var yLabel = MaxValue;
-                var yStep = (MaxValue - MinValue) / (GridRows + 1);
-                var height = Canvas.Height / GridRows;
-                var y = height;
+                var yLabel = GlobalMax;
+                var yLabelStep = (GlobalMax - GlobalMin) / GridRows;
+                var yStep = Canvas.Height / GridRows;
+                var y = yStep;
                 Canvas.Children.Add(new TextBlock()
                 {
                     Text = String.Format("{0:N2}", yLabel),
@@ -57,8 +65,8 @@ namespace HCI.Chart
                     VerticalAlignment = VerticalAlignment.Center,
                     RenderTransform = new TranslateTransform(-45, -12),
                 });
-                yLabel -= yStep;
-                for (uint i = 1; i < GridRows; ++i)
+                yLabel -= yLabelStep;
+                for (int i = 1; i < GridRows; ++i)
                 {
                     Canvas.Children.Add(new Line()
                     {
@@ -75,8 +83,8 @@ namespace HCI.Chart
                         VerticalAlignment = VerticalAlignment.Center,
                         RenderTransform = new TranslateTransform(-45, y - 12),
                     });
-                    y += height;
-                    yLabel -= yStep;
+                    y += yStep;
+                    yLabel -= yLabelStep;
                 }
                 Canvas.Children.Add(new TextBlock()
                 {
@@ -89,17 +97,17 @@ namespace HCI.Chart
 
             if (GridCols >= 2)
             {
-                var xLabels = Sample(Labels, GridCols + 1);
-                var width = Canvas.Width / GridCols;
-                var x = width;
+                var xLabels = Sample();
+                var xStep = Canvas.Width / GridCols;
+                var x = xStep;
                 Canvas.Children.Add(new TextBlock()
                 {
                     Text = xLabels[0],
                     FontSize = 12,
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    RenderTransform = new TranslateTransform(6, Canvas.Height + 5),
+                    RenderTransform = new TranslateTransform(-5, Canvas.Height + 5),
                 });
-                for (uint i = 1; i < GridCols; ++i)
+                for (int i = 1; i < GridCols; ++i)
                 {
                     Canvas.Children.Add(new Line()
                     {
@@ -107,62 +115,112 @@ namespace HCI.Chart
                         X2 = x, Y2 = Canvas.Height,
                         Stroke = Brushes.DimGray,
                         StrokeThickness = 1,
-                        StrokeDashArray = new() { 3.0, 3.0 }
+                        StrokeDashArray = new() { 3.0, 3.0 },
                     });
                     Canvas.Children.Add(new TextBlock()
                     {
-                        Text = xLabels[Convert.ToInt32(i)],
+                        Text = xLabels[i],
                         FontSize = 12,
                         HorizontalAlignment = HorizontalAlignment.Center,
-                        RenderTransform = new TranslateTransform(x + 6, Canvas.Height + 5),
+                        RenderTransform = new TranslateTransform(x - 5, Canvas.Height + 5),
                     });
-                    x += width;
+                    x += xStep;
                 }
                 Canvas.Children.Add(new TextBlock()
                 {
-                    Text = xLabels[Convert.ToInt32(GridCols)],
+                    Text = xLabels[GridCols],
                     FontSize = 12,
                     HorizontalAlignment = HorizontalAlignment.Center,
-                    RenderTransform = new TranslateTransform(Canvas.Width + 6, Canvas.Height + 5),
+                    RenderTransform = new TranslateTransform(Canvas.Width - 5, Canvas.Height + 5),
                 });
             }
         }
 
-        public void DrawLine(List<double> xs, List<double> ys)
+        private void AddMapLegend()
         {
-            var width = Canvas.Width / (xs.Count - 1);
-            var maxValue = ys.Max();
-            var minValue = ys.Min();
+            var legend = new TextBlock()
+            {
+                FontSize = 12,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                RenderTransform = new TranslateTransform(0, -20)
+            };
+            var i = 0;
+            foreach (var k in Ys.Keys)
+            {
+                legend.Inlines.Add(new Run()
+                {
+                    Text = "—— ",
+                    Foreground = Colors[i],
+                    FontWeight = FontWeights.ExtraBold,
+                });
+                legend.Inlines.Add(new Run()
+                {
+                    Text = k.ToString() + "  ",
+                    Foreground = Brushes.Black,
+                });
+                ++i;
+            }
+            Canvas.Children.Add(legend);
+        }
 
-            if (ApproxEquals(minValue, maxValue, 5e-6))
+        private void DrawLine(List<double> values, Brush color)
+        {
+            ExtremaByLine(values, out double lineMin, out double lineMax);
+            if (ApproxEquals(lineMin, lineMax, 5e-6))
             {
                 Canvas.Children.Add(new Line()
                 {
-                    X1 = 0,
-                    Y1 = minValue,
-                    X2 = Canvas.Width,
-                    Y2 = minValue,
-                    Stroke = Brushes.DeepPink,
+                    X1 = 0, Y1 = lineMin,
+                    X2 = Canvas.Width, Y2 = lineMin,
+                    Stroke = color,
                     StrokeThickness = 2,
                 });
                 return;
             }
 
-            var previous = Canvas.Height - Scale(ys[0], minValue, maxValue, 0, Canvas.Height);
-            for (int i = 1; i < ys.Count; ++i)
+            var step = Canvas.Width / values.Count;
+            var prev = Canvas.Height - Scale(values[0], GlobalMin, GlobalMax, 0, Canvas.Height);
+            for (int i = 1; i < values.Count; ++i)
             {
-                var current = Canvas.Height - Scale(ys[i], minValue, maxValue, 0, Canvas.Height);
+                var curr = Canvas.Height - Scale(values[i], GlobalMin, GlobalMax, 0, Canvas.Height);
                 Canvas.Children.Add(new Line()
                 {
-                    X1 = (i - 1) * width,
-                    Y1 = previous,
-                    X2 = i * width,
-                    Y2 = current,
-                    Stroke = Brushes.DeepPink,
+                    X1 = (i - 1) * step, Y1 = prev,
+                    X2 = i * step, Y2 = curr,
+                    Stroke = color,
                     StrokeThickness = 2,
                 });
-                previous = current;
+                prev = curr;
             }
+        }
+
+        private void GlobalMaxima(double paddingScale = 1.0)
+        {
+            var minmax = Ys
+                .Select(kvp => kvp.Value.Apply())
+                .SelectMany(s => s)
+                .Aggregate(new { Min = double.MaxValue, Max = double.MinValue },
+                (m, e) => new
+                {
+                    Min = e < m.Min ? e : m.Min,
+                    Max = e > m.Max ? e : m.Max,
+                });
+            GlobalMin = minmax.Min * (2 - paddingScale);
+            GlobalMax = minmax.Max * paddingScale;
+        }
+
+        private static void ExtremaByLine(IEnumerable<double> values, out double min, out double max)
+        {
+            var minmax = values
+                .Aggregate(new { Min = double.MaxValue, Max = double.MinValue },
+                (m, e) => new
+                {
+                    Min = e < m.Min ? e : m.Min,
+                    Max = e > m.Max ? e : m.Max,
+                });
+            min = minmax.Min;
+            max = minmax.Max;
         }
 
         private static bool ApproxEquals(double a, double b, double eps) =>
@@ -171,13 +229,13 @@ namespace HCI.Chart
         private static double Scale(double value, double min, double max, double from, double to) =>
             from + (value - min) * (to - from) / (max - min);
 
-        private static List<string> Sample(List<string> xs, uint count)
+        private List<string> Sample()
         {
-            var skip = xs.Count / count;
-            var sampled = new List<string>() { xs[0] };
-            for (int i = 1; i <= xs.Count; ++i)
+            var skip = Xs.Count / (GridCols + 1);
+            var sampled = new List<string>() { Xs.Transform(Xs.List[0]) };
+            for (int i = 1; i <= Xs.Count; ++i)
             {
-                if (i % skip == 0) sampled.Add(xs[i - 1]);
+                if (i % skip == 0) sampled.Add(Xs.Transform(Xs.List[i - 1]));
             }
             return sampled;
         }
