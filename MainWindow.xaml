@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HCI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Width="800" Height="600">
     <Grid>
-        <Label HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="100">
-            Pozz
-        </Label>
+        <Border BorderThickness="2" BorderBrush="Black" Width="600" Height="480">
+        <Canvas x:Name="ChartCanvas" Width="600" Height="480">
+        </Canvas>
+        </Border>
     </Grid>
 </Window>
