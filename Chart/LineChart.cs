@@ -45,7 +45,7 @@ namespace HCI.Chart
             var i = 0;
             foreach (var kv in Ys)
             {
-                DrawLine(kv.Value.Apply().ToList(), Colors[i % Colors.Count]);
+                DrawLine(kv.Value.Apply().ToList(), kv.Key, Colors[i % Colors.Count]);
                 ++i;
             }
         }
@@ -164,17 +164,23 @@ namespace HCI.Chart
             Canvas.Children.Add(legend);
         }
 
-        private void DrawLine(List<double> values, Brush color)
+        private void DrawLine(List<double> values, LabelType label, Brush color)
         {
             ExtremaByLine(values, out double lineMin, out double lineMax);
             if (ApproxEquals(lineMin, lineMax, 5e-6))
             {
+                var tooltip = new ToolTip()
+                {
+                    Content = $"{(lineMax + lineMin) / 2:N2} ({label})",
+                };
+                tooltip.SetValue(ToolTipService.InitialShowDelayProperty, 100);
                 Canvas.Children.Add(new Line()
                 {
                     X1 = 0, Y1 = lineMin,
                     X2 = Canvas.Width, Y2 = lineMin,
                     Stroke = color,
                     StrokeThickness = 2,
+                    ToolTip = tooltip,
                 });
                 return;
             }
@@ -184,12 +190,20 @@ namespace HCI.Chart
             for (int i = 1; i < values.Count; ++i)
             {
                 var curr = Canvas.Height - Scale(values[i], GlobalMin, GlobalMax, 0, Canvas.Height);
+                var tooltip = new ToolTip()
+                {
+                    Content = $"{(values[i] + values[i - 1])/2:N2} ({label})",
+                };
+                tooltip.SetValue(ToolTipService.InitialShowDelayProperty, 100);
                 Canvas.Children.Add(new Line()
                 {
-                    X1 = (i - 1) * step, Y1 = prev,
-                    X2 = i * step, Y2 = curr,
+                    X1 = (i - 1) * step,
+                    Y1 = prev,
+                    X2 = i * step,
+                    Y2 = curr,
                     Stroke = color,
                     StrokeThickness = 2,
+                    ToolTip = tooltip,
                 });
                 prev = curr;
             }
