@@ -245,7 +245,7 @@ namespace HCI.Chart
 
         private List<string> Sample()
         {
-            var skip = Xs.Count / (GridCols + 1);
+            var skip = Xs.Count / GridCols;
             var sampled = new List<string>() { Xs.Transform(Xs.List[0]) };
             for (int i = 1; i <= Xs.Count; ++i)
             {
