@@ -15,6 +15,7 @@ namespace HCI.Chart
             Brushes.DeepPink,
             Brushes.DarkGreen,
             Brushes.Crimson,
+            Brushes.BlueViolet,
             Brushes.Black,
         };
 
