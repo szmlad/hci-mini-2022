@@ -146,8 +146,9 @@ namespace HCI
             {
                 chart.Ys[kvp.Key] = new(kvp.Value.Points, GetAttributeAccessor(vm.SelectedExchangeRateAttribute));
             }
-            chart.Draw();
             vm.Series = Model.Series;
+            vm.SelectedTab = 0;
+            chart.Draw();
         }
 
         private void ShowTableButton_Click(object sender, RoutedEventArgs e)

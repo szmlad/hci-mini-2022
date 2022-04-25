@@ -77,6 +77,17 @@ namespace HCI
             }
         }
 
+        private int _selectedTab;
+        public int SelectedTab
+        {
+            get => _selectedTab;
+            set
+            {
+                _selectedTab = value;
+                OnPropertyChanged(nameof(SelectedTab));
+            }
+        }
+
         public MainViewModel()
         {
             AvailableCurrencies = new(Enum.GetValues<Currency>().Select(c => c.ToString()));
