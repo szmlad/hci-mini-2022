@@ -28,7 +28,12 @@
                             Click="AddCurrencyButton_Click">
                         Dodaj
                     </Button>
-                    <Label Margin="5,5,10,0" Content="Dodate valute:" FontSize="14" />
+                    <Label Margin="5,5,10,0">
+                        <TextBlock Text="Dodate valute (dozvoljeno je maksimalno 5 valuta):"
+                                   TextWrapping="WrapWithOverflow"
+                                   FontSize="14">
+                        </TextBlock>
+                    </Label>
                     <StackPanel Orientation="Vertical">
                         <ItemsControl ItemsSource="{Binding Path=AddedCurrencies, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
                             <ItemsControl.ItemTemplate>

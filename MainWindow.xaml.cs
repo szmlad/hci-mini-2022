@@ -60,6 +60,13 @@ namespace HCI
         {
             var ctx = (DataContext as MainViewModel)!;
             var c = ctx.SelectedAvailableCurrency;
+            if (ctx.AddedCurrencies.Count >= 5)
+            {
+                MessageBox.Show(
+                    $"Maksimalan broj dodatih valuta je 5. Ukoliko želite da dodate valutu {c}, prvo uklonite jednu od prethodno dodatih valuta.",
+                    "Greška", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             ctx.AvailableCurrencies.Remove(c);
             ctx.AddedCurrencies.Add(c);
             ctx.SelectedAvailableCurrency = ctx.AvailableCurrencies.FirstOrDefault(String.Empty);
