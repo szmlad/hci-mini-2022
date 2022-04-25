@@ -12,11 +12,18 @@ namespace HCI
     public partial class MainWindow : Window
     {
         private DataModel Model { get; set; }
+        private readonly string? apiKey;
 
         public MainWindow()
         {
             InitializeComponent();
-            Model = new DataModel(Environment.GetEnvironmentVariable("API_KEY")!, Interval.Daily);
+            apiKey = Environment.GetEnvironmentVariable("API_KEY");
+            if (apiKey == null)
+            {
+                ReportError("Nije moguće povezati se sa serverom bez API ključa. Molimo Vas definišite promenljivu okruženja API_KEY koja će sadržati API ključ.", "Grška");
+                Application.Current.Shutdown();
+            }
+            Model = new DataModel(apiKey!, Interval.Daily);
         }
 
         private MainViewModel GetViewModel() =>
@@ -84,7 +91,7 @@ namespace HCI
                 return;
             }
 
-            Model = new(Environment.GetEnvironmentVariable("API_KEY")!, GetViewModel().SelectedInterval);
+            Model = new(apiKey!, GetViewModel().SelectedInterval);
             var tasks = new List<Task<FetchResult>>();
             foreach (var c in vm.AddedCurrencies.Select(c => Enum.Parse<Currency>(c)))
                 tasks.Add(Model.AddCurrency(c));
