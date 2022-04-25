@@ -26,7 +26,7 @@ namespace HCI
         {
             if (interval.IsIntraday()) return "T";
             else if (interval == Interval.Daily) return "d";
-            else if (interval == Interval.Weekly) return "";
+            else if (interval == Interval.Weekly) return "M";
             else return "Y";
         }
 
