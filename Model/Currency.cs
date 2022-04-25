@@ -1,6 +1,6 @@
 ﻿namespace HCI.Model
 {
-    internal enum Currency
+    public enum Currency
     {
         EUR,
         USD,

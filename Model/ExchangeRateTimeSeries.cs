@@ -5,7 +5,15 @@ using System.Threading.Tasks;
 
 namespace HCI.Model
 {
-    internal class ExchangeRateDataPoint
+    public enum ExchangeRateAttribute
+    {
+        Open,
+        High,
+        Low,
+        Close
+    }
+
+    public class ExchangeRateDataPoint
     {
         public decimal Open { get; set; }
         public decimal High { get; set; }
@@ -14,7 +22,7 @@ namespace HCI.Model
         public DateTimeOffset Timestamp { get; set; }
     }
 
-    internal class ExchangeRateTimeSeries
+    public class ExchangeRateTimeSeries
     {
         public List<ExchangeRateDataPoint> Points { get; set; }
 

@@ -5,11 +5,77 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HCI"
         mc:Ignorable="d"
-        Title="MainWindow" Width="800" Height="600">
+        Title="" Width="944" Height="604">
+    <Window.DataContext>
+        <local:MainViewModel />
+    </Window.DataContext>
     <Grid>
-        <Border BorderThickness="2" BorderBrush="Black" Width="600" Height="480">
-        <Canvas x:Name="ChartCanvas" Width="600" Height="480">
-        </Canvas>
-        </Border>
+        <DockPanel Margin="10,0,-10,0">
+            <Grid DockPanel.Dock="Left" Width="200">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <Label Margin="5,5,10,0" Content="Dodaj valutu:" FontSize="14" />
+                    <ComboBox x:Name="AddCurrencyComboBox"
+                              Margin="10,0,10,5" 
+                              ItemsSource="{Binding Path=AvailableCurrencies, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                              SelectedValue="{Binding Path=SelectedAvailableCurrency, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button x:Name="AddCurrencyButton" 
+                            Margin="10,5,10,5" 
+                            FontSize="14"
+                            Click="AddCurrencyButton_Click">
+                        Dodaj
+                    </Button>
+                    <Label Margin="5,5,10,0" Content="Dodate valute:" FontSize="14" />
+                    <StackPanel Orientation="Vertical">
+                        <ItemsControl ItemsSource="{Binding Path=AddedCurrencies, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Label Content="{Binding}" />
+                                        <Button Grid.Column="1"
+                                                Click="RemoveCurrencyButton_Click"
+                                                Tag="{Binding}">
+                                            Izbriši
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Grid.Row="1">
+                    <Label Margin="5,5,10,0" Content="Učestalost promene:" />
+                    <ComboBox x:Name="SelectTimePeriodComboBox"
+                              Margin="10,0,10,5"
+                              ItemsSource="{Binding Path=Intervals, Mode=OneTime}"
+                              DisplayMemberPath="DisplayName"
+                              SelectedValue="{Binding Path=SelectedInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Label Margin="5,5,10,0" Content="Atribut za prikazivanje:" />
+                    <ComboBox x:Name="SelectExchangeRateAttribute"
+                              Margin="10,0,10,5"
+                              ItemsSource="{Binding Path=ExchangeRateAttributes, Mode=OneTime}"
+                              SelectedValue="{Binding Path=SelectedExchangeRateAttribute, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Button x:Name="RefreshChartButton"
+                            Click="RefreshChartButton_Click"
+                            Margin="10,10,10,5"
+                            FontSize="14">
+                        Osveži
+                    </Button>
+                    <Button Margin="10,5,10,10" FontSize="14">Prikaži tabelu</Button>
+                </StackPanel>
+            </Grid>
+            <Border BorderThickness="2" BorderBrush="Black" Width="600" Height="480">
+                <Canvas x:Name="ChartCanvas" Width="600" Height="480">
+                </Canvas>
+            </Border>
+        </DockPanel>
     </Grid>
 </Window>

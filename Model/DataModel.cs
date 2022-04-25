@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace HCI.Model
 {
-    internal class DataModel
+    public class DataModel
     {
         private const string BASE_CURRENCY = "RSD";
 
@@ -22,6 +22,12 @@ namespace HCI.Model
             Interval = interval;
             Series = new();
         }
+
+        public List<DateTimeOffset> GetTimestamps() =>
+            Series[Series.Keys.First()]
+                .Points
+                .Select(p => p.Timestamp)
+                .ToList();
 
         public async Task AddCurrency(Currency currency)
         {

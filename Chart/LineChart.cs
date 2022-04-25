@@ -38,6 +38,7 @@ namespace HCI.Chart
 
         public void Draw()
         {
+            Canvas.Children.Clear();
             GlobalMaxima(1.05);
             DrawGrid();
             AddMapLegend();
