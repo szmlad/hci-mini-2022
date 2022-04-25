@@ -153,7 +153,10 @@ namespace HCI
 
         private void ShowTableButton_Click(object sender, RoutedEventArgs e)
         {
-            var tableWindow = new TableWindow(GetViewModel());
+            var tableWindow = new TableWindow(GetViewModel())
+            {
+                Owner = this,
+            };
             tableWindow.Show();
         }
     }
