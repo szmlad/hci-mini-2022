@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HCI"
         mc:Ignorable="d"
-        Title="TableWindow" Height="450" Width="800">
+        Title="Tabelarni prikaz" Height="450" Width="800">
     <Grid>
         <TabControl ItemsSource="{Binding Path=Series}"
                     SelectedIndex="{Binding Path=SelectedTab, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
