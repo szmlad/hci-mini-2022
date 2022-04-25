@@ -106,10 +106,33 @@ namespace HCI
             }
 
             Model = new(Environment.GetEnvironmentVariable("API_KEY")!, GetViewModel().SelectedInterval);
-            var tasks = new List<Task>();
+            var tasks = new List<Task<FetchResult>>();
             foreach (var c in vm.AddedCurrencies.Select(c => Enum.Parse<Currency>(c)))
                 tasks.Add(Model.AddCurrency(c));
             await Task.WhenAll(tasks);
+            var results = tasks.Select(t => t.Result).ToList();
+
+            if (results.Contains(FetchResult.BadConnection))
+            {
+                MessageBox.Show(
+                    "Nije moguće povezati se sa serverom. Molimo Vas proverite svoju internet konekciju.", 
+                    "Loša konekcija", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            else if (results.Contains(FetchResult.InternalError))
+            {
+                MessageBox.Show(
+                    "Interna greška. Molimo Vas prijavite da je došlo do interne greške na adresu szmlad@gmail.com da bismo je što pre rešili!",
+                    "Interna greška", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            else if (results.Contains(FetchResult.APILimitExceeded))
+            {
+                MessageBox.Show(
+                    "Server je preopterećen. Molimo Vas sačekajte bar minut pre ponovnog osvežavanja.",
+                    "Preopterećen server", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             var timestamps = Model.GetTimestamps();
             var chart = new LineChart<Currency, ExchangeRateDataPoint, DateTimeOffset>(ChartCanvas)

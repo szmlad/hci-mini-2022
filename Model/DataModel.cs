@@ -5,9 +5,18 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Text.Json;
 using System.Linq;
+using System.Diagnostics;
 
 namespace HCI.Model
 {
+    public enum FetchResult
+    {
+        Success,
+        BadConnection,
+        APILimitExceeded,
+        InternalError,
+    }
+
     public class DataModel
     {
         private const string BASE_CURRENCY = "RSD";
@@ -29,45 +38,45 @@ namespace HCI.Model
                 .Select(p => p.Timestamp)
                 .ToList();
 
-        public async Task AddCurrency(Currency currency)
+        public async Task<FetchResult> AddCurrency(Currency currency)
         {
-            var resp = await FetchTimeSeriesData(currency);
-            var json = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(resp);
+            var (resp, status) = await FetchTimeSeriesData(currency);
+            if (status != FetchResult.Success) return status;
+            var json = JsonSerializer
+                .Deserialize<Dictionary<string, JsonElement>>(resp)!;
+
+            if (json.ContainsKey("Note")) return FetchResult.APILimitExceeded;
 
             var series = new ExchangeRateTimeSeries();
 
-            var metadataJson = json!["Meta Data"];
-            var metadata = metadataJson.Deserialize<Dictionary<string, string>>();
-
-            var dataJson = json![$"Time Series FX ({Interval.Name})"];
-            var data = dataJson.Deserialize<Dictionary<string, JsonElement>>();
-
-            foreach (var datum in data)
+            try
             {
-                var values = datum.Value.Deserialize<Dictionary<string, string>>();
-                series.Points.Add(new()
+                var dataJson = json[$"Time Series FX ({Interval.Name})"];
+                var data = dataJson
+                    .Deserialize<Dictionary<string, JsonElement>>()!;
+
+                foreach (var datum in data)
                 {
-                    Open = decimal.Parse(values["1. open"]),
-                    High = decimal.Parse(values["2. high"]),
-                    Low = decimal.Parse(values["3. low"]),
-                    Close = decimal.Parse(values["4. close"]),
-                    Timestamp = DateTimeOffset.Parse(datum.Key)
-                });
+                    var values = datum.Value
+                        .Deserialize<Dictionary<string, string>>()!;
+                    series.Points.Add(new()
+                    {
+                        Open = decimal.Parse(values["1. open"]),
+                        High = decimal.Parse(values["2. high"]),
+                        Low = decimal.Parse(values["3. low"]),
+                        Close = decimal.Parse(values["4. close"]),
+                        Timestamp = DateTimeOffset.Parse(datum.Key)
+                    });
+                }
+
+                series.Points.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+                Series[currency] = series;
+
+                return FetchResult.Success;
             }
-
-            series.Points.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
-            Series[currency] = series;
-        }
-
-        public async Task ChangeInterval(Interval newInterval)
-        {
-            Interval = newInterval;
-            var currencies = Series.Keys.ToList();
-            Series.Clear();
-
-            foreach (var currency in currencies)
+            catch (Exception)
             {
-                await AddCurrency(currency);
+                return FetchResult.InternalError;
             }
         }
 
@@ -91,10 +100,17 @@ namespace HCI.Model
             return builder.ToString();
         }
 
-        private async Task<string> FetchTimeSeriesData(Currency currency)
+        private async Task<(string, FetchResult)> FetchTimeSeriesData(Currency currency)
         {
-            using var client = new HttpClient();
-            return await client.GetStringAsync(BuildQuery(currency));
+            try
+            {
+                using var client = new HttpClient();
+                return (await client.GetStringAsync(BuildQuery(currency)), FetchResult.Success);
+            }
+            catch (HttpRequestException)
+            {
+                return (String.Empty, FetchResult.BadConnection);
+            }
         }
     }
 }
