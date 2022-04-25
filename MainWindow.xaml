@@ -69,7 +69,12 @@
                             FontSize="14">
                         Osveži
                     </Button>
-                    <Button Margin="10,5,10,10" FontSize="14">Prikaži tabelu</Button>
+                    <Button x:Name="ShowTableButton"
+                            Click="ShowTableButton_Click"
+                            Margin="10,5,10,10"
+                            FontSize="14">
+                        Prikaži tabelu
+                    </Button>
                 </StackPanel>
             </Grid>
             <Border BorderThickness="2" BorderBrush="Black" Width="600" Height="480">

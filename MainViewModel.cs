@@ -62,6 +62,21 @@ namespace HCI
             }
         }
 
+        private Dictionary<Currency, ExchangeRateTimeSeries> _series;
+        public Dictionary<Currency, ExchangeRateTimeSeries> Series
+        {
+            get => _series;
+            set
+            {
+                if (value != _series)
+                {
+                    _series = value;
+                    OnPropertyChanged(nameof(Series));
+                }
+
+            }
+        }
+
         public MainViewModel()
         {
             AvailableCurrencies = new(Enum.GetValues<Currency>().Select(c => c.ToString()));
@@ -74,6 +89,8 @@ namespace HCI
 
             ExchangeRateAttributes = new(Enum.GetValues<ExchangeRateAttribute>());
             SelectedExchangeRateAttribute = ExchangeRateAttributes.First();
+
+            Series = new();
         }
 
         protected void OnPropertyChanged(string name) =>

@@ -124,6 +124,13 @@ namespace HCI
                 chart.Ys[kvp.Key] = new(kvp.Value.Points, GetAttributeAccessor(vm.SelectedExchangeRateAttribute));
             }
             chart.Draw();
+            vm.Series = Model.Series;
+        }
+
+        private void ShowTableButton_Click(object sender, RoutedEventArgs e)
+        {
+            var tableWindow = new TableWindow(GetViewModel());
+            tableWindow.Show();
         }
     }
 }
