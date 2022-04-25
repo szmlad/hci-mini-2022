@@ -80,9 +80,7 @@ namespace HCI
             var vm = GetViewModel();
             if (vm.AddedCurrencies.Count == 0)
             {
-                MessageBox.Show(
-                    "Morate imati bar jednu dodatu valutu pre nego što biste osvežili podatke.", 
-                    "Greška", MessageBoxButton.OK, MessageBoxImage.Error);
+                ReportError("Morate imati bar jednu dodatu valutu pre nego što biste osvežili podatke.", "Greška");
                 return;
             }
 
@@ -95,23 +93,23 @@ namespace HCI
 
             if (results.Contains(FetchResult.BadConnection))
             {
-                MessageBox.Show(
+                ReportError(
                     "Nije moguće povezati se sa serverom. Molimo Vas proverite svoju internet konekciju.", 
-                    "Loša konekcija", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Loša konekcija");
                 return;
             }
             else if (results.Contains(FetchResult.InternalError))
             {
-                MessageBox.Show(
+                ReportError(
                     "Interna greška. Molimo Vas prijavite da je došlo do interne greške na adresu szmlad@gmail.com da bismo je što pre rešili!",
-                    "Interna greška", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Interna greška");
                 return;
             }
             else if (results.Contains(FetchResult.APILimitExceeded))
             {
-                MessageBox.Show(
+                ReportError(
                     "Server je preopterećen. Molimo Vas sačekajte bar minut pre ponovnog osvežavanja.",
-                    "Preopterećen server", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Preopterećen server");
                 return;
             }
 
@@ -130,6 +128,11 @@ namespace HCI
             vm.Series = Model.Series;
             vm.SelectedTab = 0;
             chart.Draw();
+        }
+
+        private void ReportError(string text, string title)
+        {
+            MessageBox.Show(text, title, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void ShowTableButton_Click(object sender, RoutedEventArgs e)
