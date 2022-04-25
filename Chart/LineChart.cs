@@ -164,24 +164,70 @@ namespace HCI.Chart
             Canvas.Children.Add(legend);
         }
 
+        private void DrawLineSegment(double x1, double y1, double x2, double y2, Brush color, string tooltipText)
+        {
+            var midX = (x1 + x2) / 2;
+            var midY = (y1 + y2) / 2;
+
+            var line = new Line()
+            {
+                X1 = x1, Y1 = y1, X2 = x2, Y2 = y2,
+                Stroke = color,
+                StrokeThickness = 3,
+            };
+            var ellipse = new Ellipse()
+            {
+                Width = 10, Height = 10,
+                Fill = color,
+                Tag = line,
+                RenderTransform = new TranslateTransform(midX - 5, midY - 5),
+            };
+            var tooltip = new TextBlock()
+            {
+                Text = tooltipText,
+                FontSize = 12,
+                RenderTransform = new TranslateTransform(midX - 5, midY > 40 ? midY - 20 : midY + 20),
+            };
+            line.MouseEnter += (sender, e) =>
+            {
+                if (!Canvas.Children.Contains(ellipse))
+                {
+                    Canvas.Children.Add(ellipse);
+                    Canvas.Children.Add(tooltip);
+                }
+            };
+            ellipse.MouseLeave += (sender, e) =>
+            {
+                foreach (var el in Canvas.Children.OfType<Ellipse>())
+                {
+                    if (ReferenceEquals(ellipse, el))
+                    {
+                        Canvas.Children.Remove(el);
+                        break;
+                    }
+                }
+                foreach (var tt in Canvas.Children.OfType<TextBlock>())
+                {
+                    if (ReferenceEquals(tt, tooltip))
+                    {
+                        Canvas.Children.Remove(tt);
+                        break;
+                    }
+                }
+            };
+            Canvas.Children.Add(line);
+        }
+        
         private void DrawLine(List<double> values, LabelType label, Brush color)
         {
             ExtremaByLine(values, out double lineMin, out double lineMax);
             if (ApproxEquals(lineMin, lineMax, 5e-6))
             {
-                var tooltip = new ToolTip()
-                {
-                    Content = $"{(lineMax + lineMin) / 2:N2} ({label})",
-                };
-                tooltip.SetValue(ToolTipService.InitialShowDelayProperty, 100);
-                Canvas.Children.Add(new Line()
-                {
-                    X1 = 0, Y1 = lineMin,
-                    X2 = Canvas.Width, Y2 = lineMin,
-                    Stroke = color,
-                    StrokeThickness = 2,
-                    ToolTip = tooltip,
-                });
+                DrawLineSegment(
+                    x1: 0, y1: lineMin, 
+                    x2: Canvas.Width, y2: lineMin,
+                    color: color,
+                    tooltipText: $"{(lineMax + lineMin) / 2:N2} ({label})");
                 return;
             }
 
@@ -190,21 +236,11 @@ namespace HCI.Chart
             for (int i = 1; i < values.Count; ++i)
             {
                 var curr = Canvas.Height - Scale(values[i], GlobalMin, GlobalMax, 0, Canvas.Height);
-                var tooltip = new ToolTip()
-                {
-                    Content = $"{(values[i] + values[i - 1])/2:N2} ({label})",
-                };
-                tooltip.SetValue(ToolTipService.InitialShowDelayProperty, 100);
-                Canvas.Children.Add(new Line()
-                {
-                    X1 = (i - 1) * step,
-                    Y1 = prev,
-                    X2 = i * step,
-                    Y2 = curr,
-                    Stroke = color,
-                    StrokeThickness = 2,
-                    ToolTip = tooltip,
-                });
+                DrawLineSegment(
+                    x1: (i - 1) * step, y1: prev,
+                    x2: i * step, y2: curr,
+                    color: color,
+                    tooltipText: $"{(values[i] + values[i - 1]) / 2:N2} ({label})");
                 prev = curr;
             }
         }
