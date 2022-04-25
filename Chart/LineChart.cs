@@ -10,18 +10,8 @@ using System.Windows.Documents;
 
 namespace HCI.Chart
 {
-    internal class LineChart<LabelType, ValueType, MarkerType>
+    public class LineChart<LabelType, ValueType, MarkerType> : Chart
     {
-        private static readonly List<Brush> Colors = new()
-        {
-            Brushes.DeepPink,
-            Brushes.DarkGreen,
-            Brushes.Crimson,
-            Brushes.Black,
-        };
-
-        private readonly Canvas Canvas;
-
         private double GlobalMax = double.MinValue;
         private double GlobalMin = double.MaxValue;
 
@@ -31,27 +21,16 @@ namespace HCI.Chart
         public Dictionary<LabelType, ListTransform<ValueType, double>> Ys;
         public ListTransform<MarkerType, string> Xs;
 
-        public LineChart(Canvas canvas)
+        public LineChart(Canvas canvas) : base(canvas)
         {
-            Canvas = canvas;
         }
 
-        public void Draw()
+        public override void Init()
         {
-            Canvas.Children.Clear();
             GlobalMaxima(1.05);
-            DrawGrid();
-            AddMapLegend();
-
-            var i = 0;
-            foreach (var kv in Ys)
-            {
-                DrawLine(kv.Value.Apply().ToList(), kv.Key, Colors[i % Colors.Count]);
-                ++i;
-            }
         }
 
-        public void DrawGrid()
+        public override void DrawGrid()
         {
             if (GridRows >= 2)
             {
@@ -137,7 +116,7 @@ namespace HCI.Chart
             }
         }
 
-        private void AddMapLegend()
+        public override void DrawLegend()
         {
             var legend = new TextBlock()
             {
@@ -163,6 +142,16 @@ namespace HCI.Chart
                 ++i;
             }
             Canvas.Children.Add(legend);
+        }
+
+        public override void DrawObject()
+        {
+            var i = 0;
+            foreach (var kv in Ys)
+            {
+                DrawLine(kv.Value.Apply().ToList(), kv.Key, Colors[i % Colors.Count]);
+                ++i;
+            }
         }
 
         private void DrawLineSegment(double x1, double y1, double x2, double y2, Brush color, string tooltipText)

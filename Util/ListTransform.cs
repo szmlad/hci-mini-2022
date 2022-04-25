@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace HCI.Util
 {
-    internal class ListTransform<ValueType, TransformedType>
+    public class ListTransform<ValueType, TransformedType>
     {
         public List<ValueType> List { get; }
         public Func<ValueType, TransformedType> Transform { get; }
