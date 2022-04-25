@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Windows;
 using System.Collections.Generic;
-using System.Windows.Media;
 using System.Threading.Tasks;
 using HCI.Model;
 using HCI.Chart;
@@ -18,35 +17,10 @@ namespace HCI
         {
             InitializeComponent();
             Model = new DataModel(Environment.GetEnvironmentVariable("API_KEY")!, Interval.Daily);
-            // DrawGraph();
         }
 
         private MainViewModel GetViewModel() =>
             (DataContext as MainViewModel)!;
-
-        private async void DrawGraph()
-        {
-            await Task.WhenAll(
-                // Model.AddCurrency(Currency.USD),
-                // Model.AddCurrency(Currency.EUR),
-                Model.AddCurrency(Currency.BAM));
-
-            var timestamps = Model.GetTimestamps();
-
-            var chart = new LineChart<Currency, ExchangeRateDataPoint, DateTimeOffset>(ChartCanvas)
-            {
-                GridRows = 4,
-                GridCols = 4,
-                Xs = new(timestamps, t => t.ToString(TimeFormat(Model.Interval))),
-                Ys = new()
-                {
-                    // [Currency.USD] = new(Model.Series[Currency.USD].Points, p => Convert.ToDouble(p.Close)),
-                    // [Currency.EUR] = new(Model.Series[Currency.EUR].Points, p => Convert.ToDouble(p.Close)),
-                    [Currency.BAM] = new(Model.Series[Currency.BAM].Points, p => Convert.ToDouble(p.Close)),
-                }
-            };
-            chart.Draw();
-        }
 
         private static string TimeFormat(Interval interval)
         {
