@@ -5,5 +5,11 @@
         EUR,
         USD,
         BAM,
+        JPY,
+        MXN,
+        ISK,
+        UAH,
+        VND,
+        SEK,
     }
 }
